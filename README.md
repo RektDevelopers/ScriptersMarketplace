@@ -1,104 +1,85 @@
-# 🚀 Scripters Marketplace Ecosystem
+# Scripters Marketplace Telegram Bot
 
-## 🌐 About the Project
+## Overview
+This Telegram bot automatically processes channel posts, saves them as structured JSON files, and generates SEO-optimized HTML pages for each post.
 
-Scripters Marketplace is a comprehensive ecosystem designed for developers, traders, and tech enthusiasts to discover, share, buy, and sell high-quality scripts, tools, and resources.
+## Features
+- Captures Telegram channel posts
+- Saves post data as JSON files
+- Generates individual HTML pages for each post
+- SEO-friendly meta tags
+- Deployable on Vercel
 
-### 🔍 Project Overview
+## Prerequisites
+- Node.js (v16+)
+- Telegram Bot Token
+- Vercel Account (optional)
 
-Our platform connects developers and tech professionals through multiple channels, providing a seamless experience for script trading, collaboration, and community engagement.
+## Setup Instructions
 
-## 🌟 Key Platforms & Channels
-
-### 🤖 Official Channels
-
-| Platform | Purpose | Link |
-|----------|---------|------|
-| **Marketplace** | Main Telegram Channel | [ScriptersMarketplace](https://t.me/ScriptersMarketplace) |
-| **Free USDT Sender** | Utility Tools | [FreeUSDTSender](https://t.me/FreeUSDTSender) |
-| **Python Commander** | Python Resources | [PyCommander](https://t.me/PyCommander) |
-| **Telegram Mini App** | Interactive Platform | [ScriptersBuyBot](https://t.me/ScriptersBuyBot) |
-| **Goods Portal** | Trading Platform | [ScriptersGoods](https://t.me/ScriptersGoods) |
-| **Community Chat** | Developer Discussions | [ScriptsChats](https://t.me/ScriptsChats) |
-| **Trading Group** | Marketplace Discussions | [Scripters Trade Group](https://t.me/+Dajub7ihxQc0NmI1) |
-
-### 🌍 Web Presence
-
-- **Official Website**: [www.scripters.com](https://www.scripters.com)
-
-## 🛠 Technical Architecture
-
-### Core Components
-
-1. **Telegram Bot Integration**
-   - Automated post collection
-   - Real-time updates
-   - Cross-platform synchronization
-
-2. **Dynamic Website**
-   - SEO-optimized
-   - Responsive design
-   - Automated content updates
-
-3. **Data Management**
-   - JSON-based post storage
-   - Scheduled content refresh
-   - Image handling
-
-## 🚀 Features
-
-- **Automated Content Sync**
-  - Fetches latest posts from Telegram
-  - Updates website in real-time
-  - Supports images and text content
-
-- **SEO Optimization**
-  - Meta tag management
-  - Dynamic Open Graph support
-  - Responsive design
-
-- **Developer-Friendly**
-  - Easy-to-understand codebase
-  - Modular architecture
-  - Extensible platform
-
-## 🔧 Technical Stack
-
-- **Backend**: Python
-- **Frontend**: HTML5, JavaScript
-- **Deployment**: GitHub Actions
-- **Platform**: Telegram Bot API
-
-## 📦 Repository Structure
-
-```
-ScriptersMarketplace/
-│
-├── .github/workflows/     # CI/CD configurations
-├── bot/                   # Telegram bot scripts
-├── public/
-│   ├── data/              # JSON data storage
-│   └── images/            # Uploaded images
-├── index.html             # Main website
-└── README.md              # Project documentation
+### 1. Clone the Repository
+```bash
+git clone https://github.com/RektDevelopers/ScriptersMarketplace.git
+cd ScriptersMarketplace
 ```
 
-## 🤝 Contributing
+### 2. Install Dependencies
+```bash
+npm install
+```
 
+### 3. Configure Environment
+1. Create a Telegram bot via BotFather on Telegram
+2. Copy the bot token
+3. Edit `.env` file:
+   ```
+   BOT_TOKEN=your_telegram_bot_token
+   ```
+
+### 4. Local Development
+```bash
+# Start development server
+npm run dev
+
+# Start production server
+npm start
+```
+
+### 5. Deployment to Vercel
+```bash
+# Install Vercel CLI globally
+npm install -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy
+vercel deploy
+```
+
+## Project Structure
+- `index.js`: Main bot script
+- `.env`: Environment configuration
+- `vercel.json`: Vercel deployment settings
+- `public/data/posts/`: JSON post storage
+- `public/html/posts/`: Generated HTML pages
+
+## Security Notes
+- Keep your bot token confidential
+- Use environment variables for sensitive information
+- Sanitize user inputs to prevent XSS
+
+## Troubleshooting
+- Ensure bot has necessary channel permissions
+- Check Telegram API limits
+- Verify environment configurations
+
+## Contributing
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-## 📧 Contact
-
-Project Link: [GitHub Repository](https://github.com/rekt-developer/ScriptersMarketplace)
-
----
-
-**Disclaimer**: This project is community-driven and continuously evolving. Always verify script sources and exercise caution when downloading or purchasing scripts.
+## License
+MIT License
