@@ -6,6 +6,7 @@ import asyncio
 from typing import List, Dict, Optional
 
 import telegram
+from telegram import Update
 from telegram.ext import Application
 from telegram.error import TelegramError
 
@@ -21,7 +22,7 @@ class Config:
     BOT_TOKEN: str = os.getenv("BOT_TOKEN", "")
     CHANNEL_USERNAME: str = os.getenv("CHANNEL_USERNAME", "")
     POSTS_FILE: str = os.getenv("POSTS_FILE", "public/data/posts.json")
-    DEFAULT_IMAGE: str = os.getenv("DEFAULT_IMAGE", "default-banner.png")
+    MEDIA_DIR: str = os.getenv("MEDIA_DIR", "public/media")
     FETCH_HOURS_BACK: int = int(os.getenv("FETCH_HOURS_BACK", "48"))
     MAX_POSTS: int = int(os.getenv("MAX_POSTS", "10"))
 
@@ -64,7 +65,7 @@ def sanitize_text(text: Optional[str], max_length: int = 1000) -> str:
     return sanitized[:max_length].strip()
 
 
-async def fetch_posts(
+async def fetch_channel_posts(
     bot: telegram.Bot, 
     hours_back: Optional[int] = None, 
     max_posts: Optional[int] = None
@@ -87,19 +88,19 @@ async def fetch_posts(
         cutoff_time = datetime.now() - timedelta(hours=hours_back or Config.FETCH_HOURS_BACK)
         logger.info(f"Fetching messages from {Config.CHANNEL_USERNAME}...")
 
-        chat = await bot.get_chat(Config.CHANNEL_USERNAME)
+        # Fetch channel updates
+        updates = await bot.get_updates(allowed_updates=['channel_post'])
         
-        # Use a more robust method to fetch messages
-        messages = await bot.get_updates(
-            chat_id=chat.id, 
-            limit=max_posts or Config.MAX_POSTS
-        )
-
-        for message in messages:
-            if message.date < cutoff_time:
+        filtered_posts = []
+        for update in updates:
+            # Ensure it's a channel post and within time range
+            if (not update.channel_post or 
+                update.channel_post.date < cutoff_time):
                 continue
-
-            # Enhanced content extraction with fallback mechanisms
+            
+            message = update.channel_post
+            
+            # Extract content
             post_content = sanitize_text(message.text or message.caption or "")
             
             # Generate title with intelligent fallback
@@ -108,31 +109,26 @@ async def fetch_posts(
                 else f"Post from {message.date.strftime('%Y-%m-%d')}"
             )
 
-            # Determine image with optional media handling
-            image = (
-                message.photo[-1].file_id if message.photo 
-                else Config.DEFAULT_IMAGE
-            )
-
+            # Create post dictionary
             post = {
+                "post_id": str(message.message_id),
                 "title": title,
                 "content": post_content,
-                "image": image,
                 "link": f"https://t.me/{Config.CHANNEL_USERNAME}/{message.message_id}",
                 "timestamp": message.date.isoformat(),
             }
-            posts.append(post)
+            filtered_posts.append(post)
 
         # Sort posts by timestamp in descending order
-        posts.sort(key=lambda x: x["timestamp"], reverse=True)
-        return posts[:max_posts or Config.MAX_POSTS]
+        filtered_posts.sort(key=lambda x: x["timestamp"], reverse=True)
+        return filtered_posts[:max_posts or Config.MAX_POSTS]
 
     except TelegramError as e:
         logger.error(f"Telegram API error: {e}")
-        raise
+        return []
     except Exception as e:
-        logger.error(f"Unexpected error in fetch_posts: {e}")
-        raise
+        logger.error(f"Unexpected error in fetch_channel_posts: {e}")
+        return []
 
 
 def save_posts(posts: List[Dict[str, str]]) -> None:
@@ -146,17 +142,20 @@ def save_posts(posts: List[Dict[str, str]]) -> None:
         # Ensure directory exists with parents
         os.makedirs(os.path.dirname(Config.POSTS_FILE), exist_ok=True)
         
+        # Create a dictionary with post_id as key for easier lookup
+        posts_dict = {post['post_id']: post for post in posts}
+        
         with open(Config.POSTS_FILE, "w", encoding="utf-8") as file:
-            json.dump(posts, file, indent=4, ensure_ascii=False)
+            json.dump(posts_dict, file, indent=4, ensure_ascii=False)
         
         logger.info(f"Saved {len(posts)} posts to {Config.POSTS_FILE}")
     
     except PermissionError:
         logger.error(f"Permission denied when writing to {Config.POSTS_FILE}")
-        raise
     except OSError as e:
         logger.error(f"File system error: {e}")
-        raise
+    except Exception as e:
+        logger.error(f"Unexpected error saving posts: {e}")
 
 
 async def main() -> None:
@@ -170,7 +169,7 @@ async def main() -> None:
         
         async with Application.builder().token(Config.BOT_TOKEN).build() as application:
             bot = application.bot
-            posts = await fetch_posts(bot)
+            posts = await fetch_channel_posts(bot)
             
             if posts:
                 save_posts(posts)
@@ -179,7 +178,6 @@ async def main() -> None:
     
     except Exception as e:
         logger.error(f"Critical error in main process: {e}", exc_info=True)
-        # Optional: Add notification mechanism or retry logic here
 
 
 if __name__ == "__main__":
