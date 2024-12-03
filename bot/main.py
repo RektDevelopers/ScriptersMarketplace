@@ -1,116 +1,63 @@
-import logging
-from telegram import Bot, Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackContext
 import os
-
-# Bot Token and Channel ID from Environment Variables
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
-CHANNEL_USERNAME = "@ScriptersMarketplace"
+import logging
+import requests
+from telegram import Bot
 
 # Logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Start command handler
-def start(update: Update, context: CallbackContext):
-    """Sends a welcome message."""
-    user = update.effective_user
-    welcome_text = (
-        f"Hello, {user.first_name}!\n\n"
-        "Welcome to the Scripters Marketplace Bot! Use /help to explore features."
-    )
-    update.message.reply_text(welcome_text)
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHANNEL_ID = os.getenv("CHANNEL_ID")
+POSTS_FILE = "public/data/posts.json"
 
-# Help command handler
-def help_command(update: Update, context: CallbackContext):
-    """Sends a help message."""
-    help_text = (
-        "Available Commands:\n"
-        "/start - Start the bot\n"
-        "/post - Post to the channel\n"
-        "/fetch - Fetch channel posts\n"
-        "/generate - Generate GitHub SEO index"
-    )
-    update.message.reply_text(help_text)
-
-# Post to the channel
-def post(update: Update, context: CallbackContext):
-    """Posts a message to the Telegram channel with inline buttons."""
-    message = "\ud83d\udcb0 Get the Real Flash BTC & USDT! \ud83c\udf1f\n\n\u25cb BTC Flash & USDT Flash - Starting from $30 - $50!"
-    keyboard = [
-        [InlineKeyboardButton("Free Software", url="https://t.me/FreeUSDTSender")],
-        [InlineKeyboardButton("Consultation", url="https://t.me/PyCommander")],
-        [InlineKeyboardButton("Reviews", url="https://t.me/ScriptersBuyBot")],
-        [InlineKeyboardButton("Shop Crypto Goods", url="https://www.scripters.shop")]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    context.bot.send_message(chat_id=CHANNEL_USERNAME, text=message, reply_markup=reply_markup)
-    update.message.reply_text("Posted to the channel!")
-
-# Fetch all channel posts
-def fetch(update: Update, context: CallbackContext):
-    """Fetches recent posts from the Telegram channel."""
+# Fetch posts from Telegram channel
+def fetch_posts():
     bot = Bot(BOT_TOKEN)
     updates = bot.get_updates()
-    messages = []
+    posts = []
 
     for update in updates:
-        if update.channel_post and update.channel_post.chat.id == CHANNEL_ID:
-            messages.append(update.channel_post.text)
+        if update.channel_post and update.channel_post.chat.id == int(CHANNEL_ID):
+            post_content = update.channel_post.text or ""
+            post_image = None
 
-    if messages:
-        update.message.reply_text("\n\n".join(messages[:5]))  # Display the 5 most recent posts
-    else:
-        update.message.reply_text("No posts found.")
+            if update.channel_post.photo:
+                file_id = update.channel_post.photo[-1].file_id  # Get the highest resolution image
+                file_info = bot.get_file(file_id)
+                post_image = file_info.file_path
 
-# Generate GitHub Pages index
-def generate(update: Update, context: CallbackContext):
-    """Generates an SEO-friendly index for GitHub Pages."""
-    posts = [
-        "<html>",
-        "<head>",
-        "<title>Scripters Marketplace</title>",
-        "<meta name=\"description\" content=\"Discover, buy, and sell high-quality scripts, tools, and resources at Scripters Marketplace.\">",
-        "<meta name=\"keywords\" content=\"scripts, buy scripts, sell scripts, marketplace, tools\">",
-        "<meta name=\"author\" content=\"Rekt Developer\">",
-        "</head>",
-        "<body>",
-        "<h1>Scripters Marketplace</h1>",
-        "<p>Buy, sell, and share scripts and tools for developers.</p>"
-    ]
+            post = {
+                "title": post_content.split("\n")[0][:50],  # Use first line as title, limit to 50 chars
+                "content": post_content,
+                "image": post_image,
+                "link": f"https://t.me/{update.channel_post.chat.username}/{update.channel_post.message_id}"
+            }
+            posts.append(post)
 
-    bot = Bot(BOT_TOKEN)
-    updates = bot.get_updates()
+    return posts
 
-    for update in updates:
-        if update.channel_post and update.channel_post.chat.id == CHANNEL_ID:
-            posts.append(f"<p>{update.channel_post.text}</p>")
+# Save posts to a JSON file
+def save_posts(posts):
+    try:
+        os.makedirs(os.path.dirname(POSTS_FILE), exist_ok=True)
+        with open(POSTS_FILE, "w") as file:
+            import json
+            json.dump(posts, file, indent=4)
+        logger.info("Posts saved successfully.")
+    except Exception as e:
+        logger.error(f"Error saving posts: {e}")
 
-    posts.append("</body>")
-    posts.append("</html>")
-
-    index_content = "\n".join(posts)
-    with open("index.html", "w") as file:
-        file.write(index_content)
-
-    update.message.reply_text("GitHub Pages index generated successfully!")
-
-# Main function
+# Main execution
 def main():
-    """Start the bot."""
-    updater = Updater(BOT_TOKEN)
+    logger.info("Fetching posts...")
+    posts = fetch_posts()
 
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help_command))
-    dp.add_handler(CommandHandler("post", post))
-    dp.add_handler(CommandHandler("fetch", fetch))
-    dp.add_handler(CommandHandler("generate", generate))
-
-    updater.start_polling()
-    updater.idle()
+    if posts:
+        logger.info(f"Fetched {len(posts)} posts.")
+        save_posts(posts)
+    else:
+        logger.warning("No new posts found.")
 
 if __name__ == "__main__":
     main()
