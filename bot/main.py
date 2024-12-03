@@ -22,7 +22,6 @@ class Config:
     BOT_TOKEN: str = os.getenv("BOT_TOKEN", "")
     CHANNEL_USERNAME: str = os.getenv("CHANNEL_USERNAME", "")
     POSTS_FILE: str = os.getenv("POSTS_FILE", "public/data/posts.json")
-    MEDIA_DIR: str = os.getenv("MEDIA_DIR", "public/media")
     FETCH_HOURS_BACK: int = int(os.getenv("FETCH_HOURS_BACK", "48"))
     MAX_POSTS: int = int(os.getenv("MAX_POSTS", "10"))
 
@@ -142,8 +141,8 @@ def save_posts(posts: List[Dict[str, str]]) -> None:
         # Ensure directory exists with parents
         os.makedirs(os.path.dirname(Config.POSTS_FILE), exist_ok=True)
         
-        # Create a dictionary with post_id as key for easier lookup
-        posts_dict = {post['post_id']: post for post in posts}
+        # Always create a valid JSON file, even if empty
+        posts_dict = {post['post_id']: post for post in posts} if posts else {}
         
         with open(Config.POSTS_FILE, "w", encoding="utf-8") as file:
             json.dump(posts_dict, file, indent=4, ensure_ascii=False)
@@ -171,9 +170,10 @@ async def main() -> None:
             bot = application.bot
             posts = await fetch_channel_posts(bot)
             
-            if posts:
-                save_posts(posts)
-            else:
+            # Always save posts (will create an empty JSON if no posts found)
+            save_posts(posts)
+            
+            if not posts:
                 logger.warning("No new posts found.")
     
     except Exception as e:
