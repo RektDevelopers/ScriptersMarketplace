@@ -15,8 +15,4 @@
       "src": "/html/posts/(.*)",
       "dest": "/public/html/posts/$1"
     }
-  ],
-  "env": {
-    "BOT_TOKEN": "@bot_token"
-  }
 }
