@@ -1,52 +1,38 @@
-name: Update Index HTML
+name: Fetch Telegram Channel Posts
 
 on:
+  workflow_dispatch:  # Allow manual triggering
   schedule:
-    - cron: "0 */6 * * *"  # Runs every 6 hours
-  workflow_dispatch:  # Allows manual triggering
+    - cron: '0 */6 * * *'  # Run every 6 hours
 
 jobs:
-  update-index:
+  fetch-posts:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install Requirements
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run Bot Script
-        env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
-        run: |
-          python bot/main.py
-
-      - name: Check for Changes
-        id: check_changes
-        run: |
-          changes=$(git status --porcelain | grep -E "index.html|public/data/posts.json")
-          if [ -z "$changes" ]; then
-            echo "No changes detected."
-            echo "changes_detected=false" >> $GITHUB_OUTPUT
-          else
-            echo "Changes detected: $changes"
-            echo "changes_detected=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and Push Changes
-        if: steps.check_changes.outputs.changes_detected == 'true'
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add index.html public/data/posts.json
-          git commit -m "Update index.html and posts data with latest content"
-          git push
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install python-telegram-bot requests
+    
+    - name: Fetch Telegram Channel Posts
+      env:
+        BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
+        CHANNEL_USERNAME: ${{ secrets.CHANNEL_USERNAME }}
+      run: python bot/main.py
+    
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add public/data/posts.json public/media/*
+        git commit -m "Update Telegram channel posts" || echo "No changes to commit"
+        git push
