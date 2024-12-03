@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scripters Marketplace</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Discover, buy, and sell high-quality scripts, tools, and resources at Scripters Marketplace.">
+    <meta name="keywords" content="Scripters Marketplace, buy scripts, sell scripts, developer tools, marketplace, crypto marketplace">
+    <meta name="author" content="Scripters Marketplace">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Scripters Marketplace">
+    <meta property="og:description" content="Discover, buy, and sell high-quality scripts, tools, and resources at Scripters Marketplace.">
+    <meta property="og:url" content="https://rekt-developer.github.io/ScriptersMarketplace/">
+    <meta property="og:image" content="default-banner.png">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Scripters Marketplace">
+    <meta name="twitter:description" content="Discover, buy, and sell high-quality scripts, tools, and resources at Scripters Marketplace.">
+    <meta name="twitter:image" content="default-banner.png">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome to Scripters Marketplace</h1>
+        <p>Discover, buy, and sell high-quality scripts, tools, and resources.</p>
+    </header>
+    <main id="posts">
+        <!-- Posts from the Telegram channel will be dynamically added here -->
+    </main>
+    <footer>
+        <p>&copy; 2024 Scripters Marketplace. All rights reserved.</p>
+    </footer>
+
+    <script>
+        async function fetchPosts() {
+            try {
+                const response = await fetch('https://rekt-developer.github.io/ScriptersMarketplace/data/posts.json');
+                const posts = await response.json();
+
+                const postsContainer = document.getElementById('posts');
+                postsContainer.innerHTML = '';
+
+                posts.forEach(post => {
+                    const postElement = document.createElement('div');
+                    postElement.classList.add('post');
+
+                    let bannerImage = post.image || 'default-banner.png';
+                    postElement.innerHTML = `
+                        <img src="${bannerImage}" alt="Post Banner">
+                        <h2>${post.title}</h2>
+                        <p>${post.content}</p>
+                        <a href="${post.link}" target="_blank">Read More</a>
+                    `;
+
+                    postsContainer.appendChild(postElement);
+                });
+
+                // Update Open Graph Image dynamically
+                if (posts[0]?.image) {
+                    document.querySelector('meta[property="og:image"]').setAttribute('content', posts[0].image);
+                    document.querySelector('meta[name="twitter:image"]').setAttribute('content', posts[0].image);
+                }
+            } catch (error) {
+                console.error('Error fetching posts:', error);
+            }
+        }
+
+        fetchPosts();
+    </script>
+</body>
+</html>
