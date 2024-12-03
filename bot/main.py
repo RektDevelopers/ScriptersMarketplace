@@ -64,11 +64,12 @@ async def fetch_posts(hours_back=48):
     Fetch posts from Telegram channel, focusing on recent posts.
 
     :param hours_back: Number of hours to look back for posts
-    :return: List of processedposts
+    :return: List of processed posts
     """
     try:
         bot = Bot(BOT_TOKEN)
         updates = await bot.get_updates()
+        logger.info(f"Fetched {len(updates)} updates from Telegram.")
         cutoff_time = datetime.now() - timedelta(hours=hours_back)
         posts = []
 
@@ -90,15 +91,15 @@ async def fetch_posts(hours_back=48):
                 post_image = None
                 post_video = None
 
-                # Handlemedia
+                # Handle media
                 if update.effective_message.photo:
                     file_id = update.effective_message.photo[-1].file_id
-                    post_image = awaitdownload_media(bot, file_id,'jpg')
+                    post_image = await download_media(bot, file_id, 'jpg')
                 elif update.effective_message.document and 'video' in update.effective_message.document.mime_type:
                     file_id = update.effective_message.document.file_id
-                    post_video = awaitdownloadmedia(bot, file_id, 'mp4')
+                    post_video = await download_media(bot, file_id, 'mp4')
 
-                # Constructpostobject
+                # Construct post object
                 post = {
                     "title": post_content.split("\n")[0][:50] if post_content else "Untitled Post",
                     "content": post_content,
@@ -109,10 +110,10 @@ async def fetch_posts(hours_back=48):
                 }
                 posts.append(post)
 
-        # Sortpostsbytimestamp, most recent first
+        # Sort posts by timestamp, most recent first
         posts.sort(key=lambda x: x['timestamp'], reverse=True)
 
-        # Limit to most recent 10posts
+        # Limit to most recent 10 posts
         return posts[:10]
 
     except (BadRequest, TelegramUnauthorized) as e:
