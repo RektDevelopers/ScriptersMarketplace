@@ -1,1 +1,16 @@
-
+[
+    {
+        "title": "Sample Post Title 1",
+        "content": "This is the content of the first post fetched from the Telegram channel.",
+        "image": "default-banner.png",
+        "link": "https://t.me/ScriptersMarketplace/123",
+        "timestamp": "2024-12-03T14:45:00"
+    },
+    {
+        "title": "Another Post Title",
+        "content": "Content of the second post. This one is a bit longer and may include some media.",
+        "image": "default-banner.png",
+        "link": "https://t.me/ScriptersMarketplace/124",
+        "timestamp": "2024-12-03T14:50:00"
+    }
+]
