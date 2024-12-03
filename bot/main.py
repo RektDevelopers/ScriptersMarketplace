@@ -6,7 +6,7 @@ import asyncio
 import requests
 from telegram import Update
 from telegram.ext import Application
-from telegram.error import BadRequestError, TelegramError
+from telegram.error import TelegramError
 
 # Logging configuration
 logging.basicConfig(
@@ -24,175 +24,206 @@ DEFAULT_IMAGE = "default-banner.png"
 
 def validate_environment_variables():
     """
-    Validate required environment variables for GitHub Actions compatibility.
-    Provides clear error messages if variables are missing.
-    """
-    errors = []
-    if not BOT_TOKEN:
-        errors.append("Missing BOT_TOKEN environment variable")
-    if not CHANNEL_ID:
-        errors.append("Missing CHANNEL_ID environment variable")
-    if not CHANNEL_USERNAME:
-        errors.append("Missing CHANNEL_USERNAME environment variable")
+    Validate required environment variables with comprehensive error checking.
     
-    if errors:
-        error_message = "Environment Variable Validation Failed:\n" + "\n".join(f"- {error}" for error in errors)
-        logger.error(error_message)
-        raise ValueError(error_message)
+    Raises:
+        ValueError: If any required environment variables are missing
+    """
+    missing_vars = []
+    
+    if not BOT_TOKEN:
+        missing_vars.append("BOT_TOKEN")
+    if not CHANNEL_ID:
+        missing_vars.append("CHANNEL_ID")
+    if not CHANNEL_USERNAME:
+        missing_vars.append("CHANNEL_USERNAME")
+    
+    if missing_vars:
+        error_msg = f"Missing required environment variables: {', '.join(missing_vars)}"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
 
 def sanitize_text(text):
     """
-    Sanitize post content to remove HTML tags, escape special characters,
-    and limit length.
+    Sanitize and clean text content for safe storage and display.
     
-    :param text: Input text to sanitize
-    :return: Sanitized text
+    Args:
+        text (str): Input text to sanitize
+    
+    Returns:
+        str: Sanitized text with HTML special characters escaped
     """
     if not text:
         return ""
-    text = text.replace("<", "&lt;").replace(">", "&gt;")
-    return text[:1000].strip()
+    
+    # Escape HTML special characters and truncate
+    sanitized = text.replace("<", "&lt;").replace(">", "&gt;")
+    return sanitized[:1000].strip()
 
 async def download_media(bot, file_id, file_type):
     """
     Download media from Telegram and save locally.
     
-    :param bot: Telegram bot instance
-    :param file_id: Unique file identifier
-    :param file_type: Type of file to download (e.g., 'jpg', 'mp4')
-    :return: Path to saved media or None if download fails
+    Args:
+        bot: Telegram bot instance
+        file_id (str): Unique file identifier
+        file_type (str): Type of file to download (e.g., 'jpg', 'mp4')
+    
+    Returns:
+        str or None: Path to saved media or None if download fails
     """
     try:
-        file = await bot.get_file(file_id)
-        file_path = f"public/media/{file_id}.{file_type}"
-        
         # Ensure media directory exists
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
+        media_dir = "public/media"
+        os.makedirs(media_dir, exist_ok=True)
+        
+        # Get file information
+        file = await bot.get_file(file_id)
+        
+        # Construct local file path
+        file_path = os.path.join(media_dir, f"{file_id}.{file_type}")
+        
         # Download file
-        file_url = file.file_path
-        response = requests.get(file_url)
-
+        response = requests.get(file.file_path)
+        
         if response.status_code == 200:
             with open(file_path, 'wb') as f:
                 f.write(response.content)
-            return file_path.replace('public/', '')  # Relative path for web
+            
+            # Return relative path
+            return file_path.replace('public/', '')
+        
+        logger.warning(f"Failed to download media. Status code: {response.status_code}")
         return None
+    
     except Exception as e:
-        logger.error(f"Media download error: {e}")
+        logger.error(f"Media download error for file {file_id}: {e}")
         return None
 
 async def fetch_posts(hours_back=48):
     """
-    Fetch posts from Telegram channel, focusing on recent posts.
-
-    :param hours_back: Number of hours to look back for posts
-    :return: List of processed posts
+    Fetch recent posts from a Telegram channel.
+    
+    Args:
+        hours_back (int): Number of hours to look back for posts
+    
+    Returns:
+        list: Processed posts from the channel
     """
+    # Validate environment variables before proceeding
     validate_environment_variables()
-
+    
+    posts = []
+    
     try:
-        # Use Application builder for modern python-telegram-bot approach
+        # Create bot application
         application = Application.builder().token(BOT_TOKEN).build()
         bot = application.bot
-
-        # Fetch channel messages directly
+        
+        # Determine cutoff time for posts
         cutoff_time = datetime.now() - timedelta(hours=hours_back)
-        posts = []
-
-        # Attempt to get messages from the channel
+        
+        # Fetch recent messages
         try:
-            channel_messages = await bot.get_chat_messages(chat_id=CHANNEL_ID, limit=10)
+            # Note: This method may vary depending on exact library version
+            # You might need to adjust based on your specific library version
+            recent_messages = await bot.get_chat_messages(chat_id=CHANNEL_ID, limit=20)
         except Exception as e:
             logger.error(f"Error fetching channel messages: {e}")
-            channel_messages = []
-
-        for message in channel_messages:
-            message_date = message.date
-
-            # Skip old messages
-            if message_date < cutoff_time:
+            return []
+        
+        for message in recent_messages:
+            # Skip messages older than cutoff time
+            if message.date < cutoff_time:
                 continue
-
-            # Extract post details
+            
+            # Extract post content
             post_content = sanitize_text(message.text or message.caption or "")
+            
+            # Initialize media variables
             post_image = None
             post_video = None
-
-            # Handle media
-            if message.photo:
-                file_id = message.photo[-1].file_id
-                post_image = await download_media(bot, file_id, 'jpg')
-            elif message.video:
-                file_id = message.video.file_id
-                post_video = await download_media(bot, file_id, 'mp4')
-            elif message.document and 'video' in message.document.mime_type:
-                file_id = message.document.file_id
-                post_video = await download_media(bot, file_id, 'mp4')
-
+            
+            # Handle different media types
+            try:
+                if message.photo:
+                    # Get the largest photo
+                    file_id = message.photo[-1].file_id
+                    post_image = await download_media(bot, file_id, 'jpg')
+                elif message.video:
+                    file_id = message.video.file_id
+                    post_video = await download_media(bot, file_id, 'mp4')
+                elif message.document and 'video' in str(message.document.mime_type).lower():
+                    file_id = message.document.file_id
+                    post_video = await download_media(bot, file_id, 'mp4')
+            except Exception as media_error:
+                logger.error(f"Media processing error: {media_error}")
+            
             # Construct post object
             post = {
-                "title": post_content.split("\n")[0][:50] if post_content else "Untitled Post",
+                "title": (post_content.split("\n")[0][:50] if post_content else "Untitled Post"),
                 "content": post_content,
                 "image": post_image or DEFAULT_IMAGE,
                 "video": post_video,
                 "link": f"https://t.me/{CHANNEL_USERNAME}/{message.message_id}",
-                "timestamp": message_date.isoformat()
+                "timestamp": message.date.isoformat()
             }
+            
             posts.append(post)
-
+        
         # Sort posts by timestamp, most recent first
         posts.sort(key=lambda x: x['timestamp'], reverse=True)
-
-        # Limit to most recent 10 posts
+        
+        # Return most recent 10 posts
         return posts[:10]
-
-    except (BadRequestError, TelegramError) as e:
-        logger.error(f"Telegram API error: {e}")
+    
+    except TelegramError as te:
+        logger.error(f"Telegram API error: {te}")
         return []
     except Exception as e:
-        logger.error(f"Unexpected error fetching posts: {e}")
+        logger.error(f"Unexpected error in fetch_posts: {e}")
         return []
 
 def save_posts(posts):
     """
-    Save posts to JSON file with comprehensive error handling.
+    Save processed posts to a JSON file.
     
-    :param posts: List of posts to save
+    Args:
+        posts (list): List of post dictionaries to save
     """
     try:
-        # Ensure directory exists
+        # Ensure the directory exists
         os.makedirs(os.path.dirname(POSTS_FILE), exist_ok=True)
-
-        # Write posts to JSON file with UTF-8 encoding and pretty formatting
+        
+        # Write posts to JSON file
         with open(POSTS_FILE, "w", encoding='utf-8') as file:
             json.dump(posts, file, indent=4, ensure_ascii=False)
-
+        
         logger.info(f"Successfully saved {len(posts)} posts to {POSTS_FILE}")
     except Exception as e:
-        logger.error(f"Error saving posts: {e}")
-        # Optionally, you could add additional error handling here
-        # such as sending an alert or attempting to retry
+        logger.error(f"Error saving posts to file: {e}")
 
 async def main():
     """
-    Async main function to fetch and save posts.
-    Designed to work with GitHub Actions and provide clear logging.
+    Main async function to fetch and save Telegram channel posts.
+    Provides comprehensive error handling and logging.
     """
     logger.info("Starting Telegram channel post collection process...")
-
+    
     try:
+        # Fetch posts
         posts = await fetch_posts()
-
+        
+        # Save posts if any are found
         if posts:
             save_posts(posts)
         else:
-            logger.warning("No new posts found in the last 48 hours.")
+            logger.warning("No new posts found in the specified time range.")
+    
     except Exception as e:
-        logger.error(f"Critical error during post collection: {e}")
-        # In a GitHub Actions context, this will cause the workflow to fail
+        logger.error(f"Critical error in main process: {e}")
         raise
 
 if __name__ == "__main__":
-    # Use asyncio to run the async main function
+    # Run the async main function
     asyncio.run(main())
