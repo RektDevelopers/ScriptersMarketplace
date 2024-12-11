@@ -1,16 +1,145 @@
-[
+{
+  "message_id": 38,
+  "sender_chat": {
+    "id": -1002433435702,
+    "title": "Scripters - Buy Sell Marketplaces!",
+    "username": "ScriptersMarketplace",
+    "type": "channel"
+  },
+  "chat": {
+    "id": -1002433435702,
+    "title": "Scripters - Buy Sell Marketplaces!",
+    "username": "ScriptersMarketplace",
+    "type": "channel"
+  },
+  "date": 1733246197,
+  "text": null,
+  "caption": "💎 Get the Real Flash BTC & USDT 🌉\n\n○ BTC Flash & USDT Flash  — Starting from $30 — $50!! ☀️\n\n☀️ Got Doubts?\nNo worries! I’m here to explain how the Real Flash BTC & USDT works. Say goodbye to scammers and fake promises. Learn how it actually functions without falling for scams!\n\n✓ Why Choose Us?\n○ Avoid scammy software—none of them work!\n○ Real tools, real results, and real support.\n\n▲ What to Do Next?\n○ Free Software: @FreeUSDTSender\n○ Consultation: @PyCommander\n○ Reviews: @ScriptersBuyBot\n○ Shop Crypto Goods: Scripters Shop | www.scripters.shop\n\n🚀 Stop wasting time on scams. Get the Real deal now!",
+  "media": [
     {
-        "title": "Sample Post Title 1",
-        "content": "This is the content of the first post fetched from the Telegram channel.",
-        "image": "default-banner.png",
-        "link": "https://t.me/ScriptersMarketplace/123",
-        "timestamp": "2024-12-03T14:45:00"
+      "file_id": "AgACAgUAAyEFAASRC0g2AAMmZ0889XKlL-rkbfXw55uJKIGvJaIAAqLAMRvRt3lWYGTgZ65xfM8BAAMCAANzAAM2BA",
+      "file_unique_id": "AQADosAxG9G3eVZ4",
+      "file_size": 1149,
+      "width": 90,
+      "height": 51
     },
     {
-        "title": "Another Post Title",
-        "content": "Content of the second post. This one is a bit longer and may include some media.",
-        "image": "default-banner.png",
-        "link": "https://t.me/ScriptersMarketplace/124",
-        "timestamp": "2024-12-03T14:50:00"
+      "file_id": "AgACAgUAAyEFAASRC0g2AAMmZ0889XKlL-rkbfXw55uJKIGvJaIAAqLAMRvRt3lWYGTgZ65xfM8BAAMCAANtAAM2BA",
+      "file_unique_id": "AQADosAxG9G3eVZy",
+      "file_size": 16923,
+      "width": 320,
+      "height": 180
+    },
+    {
+      "file_id": "AgACAgUAAyEFAASRC0g2AAMmZ0889XKlL-rkbfXw55uJKIGvJaIAAqLAMRvRt3lWYGTgZ65xfM8BAAMCAAN4AAM2BA",
+      "file_unique_id": "AQADosAxG9G3eVZ9",
+      "file_size": 71234,
+      "width": 800,
+      "height": 450
+    },
+    {
+      "file_id": "AgACAgUAAyEFAASRC0g2AAMmZ0889XKlL-rkbfXw55uJKIGvJaIAAqLAMRvRt3lWYGTgZ65xfM8BAAMCAAN5AAM2BA",
+      "file_unique_id": "AQADosAxG9G3eVZ-",
+      "file_size": 92960,
+      "width": 1280,
+      "height": 720
     }
-]
+  ],
+  "caption_entities": [
+    {
+      "offset": 0,
+      "length": 35,
+      "type": "bold"
+    },
+    {
+      "offset": 39,
+      "length": 23,
+      "type": "bold"
+    },
+    {
+      "offset": 79,
+      "length": 4,
+      "type": "bold"
+    },
+    {
+      "offset": 85,
+      "length": 6,
+      "type": "bold"
+    },
+    {
+      "offset": 98,
+      "length": 11,
+      "type": "bold"
+    },
+    {
+      "offset": 150,
+      "length": 21,
+      "type": "bold"
+    },
+    {
+      "offset": 284,
+      "length": 14,
+      "type": "bold"
+    },
+    {
+      "offset": 391,
+      "length": 16,
+      "type": "bold"
+    },
+    {
+      "offset": 410,
+      "length": 14,
+      "type": "bold"
+    },
+    {
+      "offset": 425,
+      "length": 15,
+      "type": "text_link",
+      "url": "https://t.me/FreeUSDTSender"
+    },
+    {
+      "offset": 443,
+      "length": 13,
+      "type": "bold"
+    },
+    {
+      "offset": 457,
+      "length": 12,
+      "type": "text_link",
+      "url": "https://t.me/PyCommander"
+    },
+    {
+      "offset": 472,
+      "length": 8,
+      "type": "bold"
+    },
+    {
+      "offset": 481,
+      "length": 16,
+      "type": "text_link",
+      "url": "https://t.me/ScriptersBuyBot"
+    },
+    {
+      "offset": 500,
+      "length": 18,
+      "type": "bold"
+    },
+    {
+      "offset": 519,
+      "length": 14,
+      "type": "text_link",
+      "url": "https://t.me/ScriptersGoods"
+    },
+    {
+      "offset": 536,
+      "length": 18,
+      "type": "text_link",
+      "url": "https://www.scripters.shop/"
+    },
+    {
+      "offset": 556,
+      "length": 53,
+      "type": "bold"
+    }
+  ]
+}
